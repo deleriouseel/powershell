@@ -1,10 +1,108 @@
-$from_email = $Env:M365_ADMIN_EMAIL
-$to_email = $env:EMAIL_TO
-$username = $Env:M365_ADMIN_EMAIL
-$password = $Env:M365_ADMIN_PASSWORD
-$telos_auth = $Env:TELOS_AUTH
-$cred = New-Object -TypeName System.Management.Automation.PSCredential -argumentlist $userName, $(convertto-securestring $Password -asplaintext -force)
 
+
+function Send-SendGridEmail {
+    <#
+    .SYNOPSIS
+    Function to send email with Twilio SendGrid
+    
+    .DESCRIPTION
+    A function to send a text or HTML based email with PowerShell and SendGrid.
+    See https://docs.sendgrid.com/api-reference/mail-send/mail-send for API details.
+    Update the API key and from address in the function before using.
+    This script provided as-is with no warranty. Test it before you trust it.
+    www.ciraltos.com
+       
+    .PARAMETER to_email
+    The destination email address.
+       
+    .PARAMETER subject
+    The subject of the email.
+    
+    .PARAMETER contentType
+    The content type, values are “text/plain” or “text/html”.  "text/plain" set by default.
+    
+    .PARAMETER contentBody
+    The HTML or plain text content that of the email.
+
+    .NOTES
+    Version:        2.0
+    Author:         Travis Roberts
+    Creation Date:  12/1/2022
+    Purpose/Change: Update for latest release of Twilio SendGrid
+    ****   Update the API key and from email address with matching settings from SendGrid  ****
+    ****   From address must be validated to before email delivery                         ****
+    ****   This script provided as-is with no warranty. Test it before you trust it.       ****
+    
+    .Example
+    See my YouTube channel at http://www.youtube.com/c/TravisRoberts or https://www.ciraltos.com for details.
+    #>
+
+    param(
+        [Parameter(Mandatory = $true)]
+        [String] $to_email,
+        [Parameter(Mandatory = $true)]
+        [String] $subject,
+        [Parameter(Mandatory = $false)]
+        [string]$contentType = 'text/plain',
+        [Parameter(Mandatory = $true)]
+        [String] $contentBody
+    )
+
+    ############ Update with your SendGrid API Key and Verified Email Address ####################
+    $apiKey = $password
+	$from_email = $Env:EMAIL_FROM
+	$to_email = $env:EMAIL_TO
+	$password = $Env:SENDGRID_API_KEY
+  
+    $headers = @{
+        'Authorization' = 'Bearer ' + $apiKey
+        'Content-Type'  = 'application/json'
+    }
+  
+    $body = @{
+        personalizations = @(
+            @{
+                to = @(
+                    @{
+                        email = $to_email
+                    }
+                )
+            }
+        )
+        from             = @{
+            email = $from_email
+        }
+        subject          = $subject
+        content          = @(
+            @{
+                type  = $contentType
+                value = $contentBody
+            }
+        )
+    }
+  
+    try {
+        $bodyJson = $body | ConvertTo-Json -Depth 4
+    }
+    catch {
+        $ErrorMessage = $_.Exception.message
+        write-error ('Error converting body to json ' + $ErrorMessage)
+        Break
+    }
+  
+    try {
+       Invoke-RestMethod -Uri https://api.sendgrid.com/v3/mail/send -Method Post -Headers $headers -Body $bodyJson 
+    }
+    catch {
+        $ErrorMessage = $_.Exception.message
+        write-error ('Error with Invoke-RestMethod ' + $ErrorMessage)
+        Break
+    }
+
+}
+  
+  
+$telos_auth = $Env:TELOS_AUTH
 
 $headers = @{
     'Cache-Control' = 'max-age=0'
@@ -17,19 +115,39 @@ $headers = @{
 	'Accept-Language' = 'en-US,en;q=0.9'
 }
 
+
 Start-Transcript -Path "C:\Users\Kristin\Documents\GitHub\powershell\telos_disconnect.log"
 
 try{
 Write-Host "Starting Disconnect"
 Invoke-RestMethod -Method GET -Uri http://10.10.0.20/cmd/call/disconnect -Headers $headers -StatusCodeVariable 'response'
-Send-MailMessage -From $from_email -to $to_email  -Subject "Telos disconnected" -Body $response -SmtpServer smtp.office365.com -port 587 -UseSsl -Credential $cred 
+$splat = @{
+    subject          = 'Telos disconnected'
+    contentBody      =  $response
+}
+Send-SendGridEmail @splat
+  
 }
 
 catch {
+
 	Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
 	$description = Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
-	Send-MailMessage -From $from_email -to $to_email  -Subject "Telos did not disconnect" -Body "$response <p> $description</p>" -SmtpServer smtp.office365.com -port 587 -UseSsl -Credential $cred 
-} 
+
+	$htmlBody = @"
+		$response
+		$description
+"@
+
+	$splat = @{
+    subject          = 'Telos NOT disconnected'
+    contentBody      =  $htmlBody
+}
+
+Send-SendGridEmail @splat
+}
+
+
 	
 
 Stop-Transcript
