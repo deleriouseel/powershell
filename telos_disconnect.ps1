@@ -124,6 +124,7 @@ Invoke-RestMethod -Method GET -Uri http://10.10.0.20/cmd/call/disconnect -Header
 $splat = @{
     subject          = 'Telos disconnected'
     contentBody      =  $response
+	to_email 		 =  $to_email
 }
 Send-SendGridEmail @splat
   
@@ -132,22 +133,15 @@ Send-SendGridEmail @splat
 catch {
 
 	Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
-	$description = Write-Host "StatusDescription:" $_.Exception.Response.StatusDescription
-
-	$htmlBody = @"
-		$response
-		$description
-"@
 
 	$splat = @{
     subject          = 'Telos NOT disconnected'
-    contentBody      =  $htmlBody
+    contentBody      =  $_.Exception.Response.StatusCode.value__ 
+	to_email 		 =  $to_email
 }
 
 Send-SendGridEmail @splat
 }
 
-
-	
 
 Stop-Transcript
