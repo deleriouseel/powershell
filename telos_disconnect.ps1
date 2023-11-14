@@ -1,5 +1,4 @@
 
-
 function Send-SendGridEmail {
     <#
     .SYNOPSIS
@@ -49,10 +48,11 @@ function Send-SendGridEmail {
     )
 
     ############ Update with your SendGrid API Key and Verified Email Address ####################
-    $apiKey = $password
+    $apiKey = $Env:SENDGRID_API_KEY
+    $to_email = $Env:EMAIL_TO
 	$from_email = $Env:EMAIL_FROM
-	$to_email = $env:EMAIL_TO
-	$password = $Env:SENDGRID_API_KEY
+    
+
   
     $headers = @{
         'Authorization' = 'Bearer ' + $apiKey
@@ -106,7 +106,7 @@ $telos_auth = $Env:TELOS_AUTH
 
 $headers = @{
     'Cache-Control' = 'max-age=0'
-	'Authorization' =  "Basic $telos_auth"
+	'Authorization' = "Basic $telos_auth"
 	'Upgrade-Insecure-Requests' =  '1'
 	'User-Agent' = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.97 Safari/537.36'
 	'Accept' = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'
@@ -121,12 +121,7 @@ Start-Transcript -Path "C:\Users\Kristin\Documents\GitHub\powershell\telos_disco
 try{
 Write-Host "Starting Disconnect"
 Invoke-RestMethod -Method GET -Uri http://10.10.0.20/cmd/call/disconnect -Headers $headers -StatusCodeVariable 'response'
-$splat = @{
-    subject          = 'Telos disconnected'
-    contentBody      =  $response
-	to_email 		 =  $to_email
-}
-Send-SendGridEmail @splat
+Write-Host $response
   
 }
 
@@ -137,7 +132,7 @@ catch {
 	$splat = @{
     subject          = 'Telos NOT disconnected'
     contentBody      =  $_.Exception.Response.StatusCode.value__ 
-	to_email 		 =  $to_email
+    to_email = $to_email
 }
 
 Send-SendGridEmail @splat
