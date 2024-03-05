@@ -141,7 +141,7 @@ catch {
 
 # Fetch web page content
 try {
-    $webPageContent = Invoke-WebRequest -Uri $telosUrl -UseBasicParsing
+    $webPageContent = Invoke-WebRequest -Uri $telosUrl -Headers $headers -StatusCodeVariable 'response'
 }
 catch {
     Write-Host "Error fetching web page: $_"
