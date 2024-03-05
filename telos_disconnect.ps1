@@ -50,7 +50,7 @@ function Send-SendGridEmail {
     ############ Update with your SendGrid API Key and Verified Email Address ####################
     $apiKey = $Env:SENDGRID_API_KEY
     $to_email = $Env:EMAIL_TO
-	$from_email = $Env:EMAIL_FROM
+    $from_email = $Env:EMAIL_FROM
     
 
   
@@ -91,7 +91,7 @@ function Send-SendGridEmail {
     }
   
     try {
-       Invoke-RestMethod -Uri https://api.sendgrid.com/v3/mail/send -Method Post -Headers $headers -Body $bodyJson 
+        Invoke-RestMethod -Uri https://api.sendgrid.com/v3/mail/send -Method Post -Headers $headers -Body $bodyJson 
     }
     catch {
         $ErrorMessage = $_.Exception.message
@@ -101,42 +101,62 @@ function Send-SendGridEmail {
 
 }
   
-  
+$telosUrl = "http://10.10.0.20/logs"
+$searchText = "Idle, call duration"  
 $telos_auth = $Env:TELOS_AUTH
 
 $headers = @{
-    'Cache-Control' = 'max-age=0'
-	'Authorization' = "Basic $telos_auth"
-	'Upgrade-Insecure-Requests' =  '1'
-	'User-Agent' = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.97 Safari/537.36'
-	'Accept' = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'
-	'Referer' = 'http://10.10.0.20/' 
-	'Accept-Encoding' = 'gzip, deflate' 
-	'Accept-Language' = 'en-US,en;q=0.9'
+    'Cache-Control'             = 'max-age=0'
+    'Authorization'             = "Basic $telos_auth"
+    'Upgrade-Insecure-Requests' = '1'
+    'User-Agent'                = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.97 Safari/537.36'
+    'Accept'                    = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7'
+    'Referer'                   = 'http://10.10.0.20/' 
+    'Accept-Encoding'           = 'gzip, deflate' 
+    'Accept-Language'           = 'en-US,en;q=0.9'
 }
 
 
 Start-Transcript -Path "C:\Users\Kristin\Documents\GitHub\powershell\telos_disconnect.log"
 
-try{
-Write-Host "Starting Disconnect"
-Invoke-RestMethod -Method GET -Uri http://10.10.0.20/cmd/call/disconnect -Headers $headers -StatusCodeVariable 'response'
-Write-Host $response
-  
+try {
+    Write-Host "Starting Disconnect"
+    Invoke-RestMethod -Method GET -Uri http://10.10.0.20/cmd/call/disconnect -Headers $headers -StatusCodeVariable 'response'
+    Write-Host $response
+
 }
 
 catch {
 
-	Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
+    Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
 
-	$splat = @{
-    subject          = 'Telos NOT disconnected'
-    contentBody      =  $_.Exception.Response.StatusCode.value__ 
-    to_email = $to_email
+    $splat = @{
+        subject     = 'Telos NOT disconnected'
+        contentBody = $_.Exception.Response.StatusCode.value__ 
+        to_email    = $to_email
+    }
+
+    Send-SendGridEmail @splat
 }
 
-Send-SendGridEmail @splat
+# Fetch web page content
+try {
+    $webPageContent = Invoke-WebRequest -Uri $telosUrl -UseBasicParsing
+}
+catch {
+    Write-Host "Error fetching web page: $_"
+    exit
 }
 
+$telosPage = $webPageContent.Content -split '\r?\n' | Where-Object { $_ -like "*$searchText*" }
+
+if ($telosPage.Count -gt 0) {
+    foreach ($line in $foundLines) {
+        Write-Host "Text '$searchText' found on $webPageUrl in line: $line"
+    }
+}
+else {
+    Write-Host "Disconnect not found"
+}
 
 Stop-Transcript
