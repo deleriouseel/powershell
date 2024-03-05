@@ -142,21 +142,22 @@ catch {
 # Fetch web page content
 try {
     $webPageContent = Invoke-WebRequest -Uri $telosUrl -Headers $headers 
+    
+    $telosPage = $webPageContent.Content -split '\r?\n' | Where-Object { $_ -like "*$searchText*" }
+
+    if ($telosPage.Count -gt 0) {
+        foreach ($line in $foundLines) {
+            Write-Host "Text '$searchText' found on $webPageUrl in line: $line"
+        }
+    }
+    else {
+        Write-Host "Disconnect not found"
+    }
 }
 catch {
     Write-Host "Error fetching web page: $_"
     exit
 }
 
-$telosPage = $webPageContent.Content -split '\r?\n' | Where-Object { $_ -like "*$searchText*" }
-
-if ($telosPage.Count -gt 0) {
-    foreach ($line in $foundLines) {
-        Write-Host "Text '$searchText' found on $webPageUrl in line: $line"
-    }
-}
-else {
-    Write-Host "Disconnect not found"
-}
 
 Stop-Transcript
