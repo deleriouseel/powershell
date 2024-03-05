@@ -123,6 +123,25 @@ try {
     Write-Host "Starting Disconnect"
     Invoke-RestMethod -Method GET -Uri http://10.10.0.20/cmd/call/disconnect -Headers $headers -StatusCodeVariable 'response'
     Write-Host $response
+    try {
+        $webPageContent = Invoke-WebRequest -Uri $telosUrl -Headers $headers 
+    
+        $telosPage = $webPageContent.Content -split '\r?\n' | Where-Object { $_ -like "*$searchText*" }
+
+        if ($telosPage.Count -gt 0) {
+            foreach ($line in $foundLines) {
+                Write-Host "Text '$searchText' found on $webPageUrl in line: $line"
+            }
+        }
+        else {
+            Write-Host "Disconnect not found"
+        }
+    }
+    catch {
+        Write-Host "Error fetching web page: $_"
+        exit
+    }
+
 
 }
 
@@ -138,26 +157,5 @@ catch {
 
     Send-SendGridEmail @splat
 }
-
-# Fetch web page content
-try {
-    $webPageContent = Invoke-WebRequest -Uri $telosUrl -Headers $headers 
-    
-    $telosPage = $webPageContent.Content -split '\r?\n' | Where-Object { $_ -like "*$searchText*" }
-
-    if ($telosPage.Count -gt 0) {
-        foreach ($line in $foundLines) {
-            Write-Host "Text '$searchText' found on $webPageUrl in line: $line"
-        }
-    }
-    else {
-        Write-Host "Disconnect not found"
-    }
-}
-catch {
-    Write-Host "Error fetching web page: $_"
-    exit
-}
-
 
 Stop-Transcript
