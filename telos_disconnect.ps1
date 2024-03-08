@@ -101,7 +101,7 @@ function Send-SendGridEmail {
 
 }
   
-$telosUrl = "http://10.10.0.20/logs"
+
 $searchText = "Idle, call duration"  
 $telos_auth = $Env:TELOS_AUTH
 
@@ -124,9 +124,9 @@ try {
     Invoke-RestMethod -Method GET -Uri http://10.10.0.20/cmd/call/disconnect -Headers $headers -StatusCodeVariable 'response'
     Write-Host $response
     try {
-        $webPageContent = Invoke-WebRequest -Uri $telosUrl -Headers $headers 
-    
+        $webPageContent = Invoke-WebRequest -Uri "http://10.10.0.20/logs" -Headers $headers 
         $telosPage = $webPageContent.Content -split '\r?\n' | Where-Object { $_ -like "*$searchText*" }
+        Write-Host $telosPage
 
         if ($telosPage.Count -gt 0) {
             foreach ($line in $foundLines) {
@@ -134,11 +134,27 @@ try {
             }
         }
         else {
-            Write-Host "Disconnect not found"
+            Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
+
+    $splat = @{
+        subject     = 'Telos NOT disconnected'
+        contentBody = $_.Exception.Response.StatusCode.value__ 
+        to_email    = $to_email
+    }
+
+    Send-SendGridEmail @splat
         }
     }
     catch {
-        Write-Host "Error fetching web page: $_"
+        Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
+
+    $splat = @{
+        subject     = 'Telos did not respond'
+        contentBody = $_.Exception.Response.StatusCode.value__ 
+        to_email    = $to_email
+    }
+
+    Send-SendGridEmail @splat
         exit
     }
 
@@ -150,7 +166,7 @@ catch {
     Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
 
     $splat = @{
-        subject     = 'Telos NOT disconnected'
+        subject     = 'Telos may not be disconnected'
         contentBody = $_.Exception.Response.StatusCode.value__ 
         to_email    = $to_email
     }
