@@ -124,37 +124,38 @@ try {
     Invoke-RestMethod -Method GET -Uri http://10.10.0.20/cmd/call/disconnect -Headers $headers -StatusCodeVariable 'response'
     Write-Host $response
     try {
+        Start-Sleep -Seconds 30
         $webPageContent = Invoke-WebRequest -Uri "http://10.10.0.20/logs" -Headers $headers 
         $telosPage = $webPageContent.Content -split '\r?\n' | Where-Object { $_ -like "*$searchText*" }
-        Write-Host $telosPage
+        
 
         if ($telosPage.Count -gt 0) {
-            foreach ($line in $foundLines) {
+            foreach ($line in $telosPage) {
                 Write-Host "Text '$searchText' found on $webPageUrl in line: $line"
             }
         }
         else {
             Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
 
-    $splat = @{
-        subject     = 'Telos NOT disconnected'
-        contentBody = $_.Exception.Response.StatusCode.value__ 
-        to_email    = $to_email
-    }
+            $splat = @{
+                subject     = 'Telos NOT disconnected'
+                contentBody = $_.Exception.Response.StatusCode.value__ 
+                to_email    = $to_email
+            }
 
-    Send-SendGridEmail @splat
+                Send-SendGridEmail @splat
         }
     }
     catch {
         Write-Host "StatusCode:" $_.Exception.Response.StatusCode.value__ 
 
-    $splat = @{
-        subject     = 'Telos did not respond'
-        contentBody = $_.Exception.Response.StatusCode.value__ 
-        to_email    = $to_email
-    }
+        $splat = @{
+            subject     = 'Telos did not respond'
+            contentBody = $_.Exception.Response.StatusCode.value__ 
+            to_email    = $to_email
+        }
 
-    Send-SendGridEmail @splat
+        Send-SendGridEmail @splat
         exit
     }
 
