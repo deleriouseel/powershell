@@ -20,7 +20,7 @@ headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
 }
 
-
+# def getDates to get the previous weekend's dates
 def getDates():
     #ISO 0 = year, 1 = week number, 2 = day of week
     week_day = datetime.datetime.now().isocalendar()[2]
@@ -33,7 +33,7 @@ def getDates():
     logging.info(dates)    
     return dates
 
-# def getAPI(num,url):
+# def getAPI to get the study titles from website API: needs url
 def getAPI(url):
     response = requests.get(url,headers=headers)
     if response.status_code == 200:
@@ -45,19 +45,19 @@ def getAPI(url):
 
     else:
         logging.error(f"Error: {response.status_code} - {response.reason}")
-    
 
-
-# def writeData():
-def writeData(dates,studies, workbook):
+# def writeData to save in the excel file. 
+def writeData(dates, studies, workbook):
     current_workbook = load_workbook(workbook)
     current_workbook.iso_dates = True
     worksheet = current_workbook["Studies by Date"]
     
     zippered = []
+    # zipper the dates and study strings into one list
     for date,study in zip(dates,studies):
         zippered.append(date)
         zippered.append(study)
+
     logging.info(zippered)
     worksheet.append(zippered)
     current_workbook.save(workbook)
@@ -65,6 +65,7 @@ def writeData(dates,studies, workbook):
 
 
 try: 
+    logging.info("Starting script")
     dates = getDates()
     studies = getAPI(url)
 
