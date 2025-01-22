@@ -4,133 +4,135 @@
   -
   - https://www.nayuki.io/page/full-screen-clock-javascript
   -->
+
 <!DOCTYPE html>
-<html style="height: 100%; margin: 0; padding: 0">
+<html lang="en" style="height: 100%; margin: 0; padding: 0">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Clock</title>
-    <style type="text/css">
-      /* Customizable font and colors */
+    <style>
+      
       html {
         background: #000000;
         font-family: "Ubuntu", sans-serif;
         font-weight: bold;
-        color: #ffffff;
+        color: #694d4d;
         overflow: hidden;
+      }
+
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        margin: 0;
+      }
+
+      #clocktext {
+        font-kerning: none;
+      }
+
+      #countdown {
+        color: #00ff00;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        padding-bottom: 1%;
       }
     </style>
   </head>
 
-  <body
-    style="
-      display: flex;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      justify-content: center;
-      align-items: center;
-    "
-  >
-    <span id="clocktext" style="font-kerning: none"></span>
+  <body>
+    <div id="clocktext" aria-label="Current time"></div>
+    <div id="countdown" aria-label="Countdown timer"></div>
 
-    <script type="text/javascript">
+    <script>
       "use strict";
 
-      var textElem = document.getElementById("clocktext");
-      var targetWidth = 0.95; // Proportion of full screen width
-      var curFontSize = 20; // Do not change
+      document.addEventListener("DOMContentLoaded", () => {
+        const clockElem = document.getElementById("clocktext");
+        const countdownElem = document.getElementById("countdown");
+        let countdownTime = 60 * 60; // 60 minutes in seconds
+        let targetWidth = 0.95; // Proportion of full screen width
+        let curFontSize = 20; // Initial font size for clock
 
-      function updateClock() {
-        var d = new Date();
-        var s = "";
-        s += ((d.getHours() + 11) % 12) + 1 + ":";
-        s += (10 > d.getMinutes() ? "0" : "") + d.getMinutes() + ":";
-        s += (10 > d.getSeconds() ? "0" : "") + d.getSeconds();
-        textElem.textContent = s;
-        setTimeout(updateClock, 1000 - (d.getTime() % 1000) + 20);
-      }
-
-      function updateTextSize() {
-        for (var i = 0; 3 > i; i++) {
-          // Iterate for better better convergence
-          curFontSize *=
-            targetWidth /
-            (textElem.offsetWidth / textElem.parentNode.offsetWidth);
-          textElem.style.fontSize = curFontSize + "pt";
+        /**
+         * Updates the clock display every second.
+         */
+        function updateClock() {
+          const now = new Date();
+          const hours = ((now.getHours() + 11) % 12) + 1; // Convert to 12-hour format
+          const minutes = now.getMinutes().toString().padStart(2, "0");
+          const seconds = now.getSeconds().toString().padStart(2, "0");
+          clockElem.textContent = `${hours}:${minutes}:${seconds}`;
+          setTimeout(updateClock, 1000 - (now.getTime() % 1000));
         }
-      }
 
-      updateClock();
-      updateTextSize();
-      window.addEventListener("resize", updateTextSize);
-    </script>
-  </body>
-</html>
-<!--
-  - Full screen clock (12-hour with seconds)
-  - Copyright (c) 2018 Project Nayuki
-  -
-  - https://www.nayuki.io/page/full-screen-clock-javascript
-  -->
-<!DOCTYPE html>
-<html style="height: 100%; margin: 0; padding: 0">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Clock</title>
-    <style type="text/css">
-      /* Customizable font and colors */
-      html {
-        background: #000000;
-        font-family: "Ubuntu", sans-serif;
-        font-weight: bold;
-        color: #ffffff;
-        overflow: hidden;
-      }
-    </style>
-  </head>
-
-  <body
-    style="
-      display: flex;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-      justify-content: center;
-      align-items: center;
-    "
-  >
-    <span id="clocktext" style="font-kerning: none"></span>
-
-    <script type="text/javascript">
-      "use strict";
-
-      var textElem = document.getElementById("clocktext");
-      var targetWidth = 0.95; // Proportion of full screen width
-      var curFontSize = 20; // Do not change
-
-      function updateClock() {
-        var d = new Date();
-        var s = "";
-        s += ((d.getHours() + 11) % 12) + 1 + ":";
-        s += (10 > d.getMinutes() ? "0" : "") + d.getMinutes() + ":";
-        s += (10 > d.getSeconds() ? "0" : "") + d.getSeconds();
-        textElem.textContent = s;
-        setTimeout(updateClock, 1000 - (d.getTime() % 1000) + 20);
-      }
-
-      function updateTextSize() {
-        for (var i = 0; 3 > i; i++) {
-          // Iterate for better better convergence
-          curFontSize *=
-            targetWidth /
-            (textElem.offsetWidth / textElem.parentNode.offsetWidth);
-          textElem.style.fontSize = curFontSize + "pt";
+        /**
+         * Checks if the current time matches the scheduled time (Friday at 8:18 PM).
+         */
+        function shouldStartCountdown() {
+          const now = new Date();
+          const isFriday = now.getDay() === 5; // Friday
+          const isTime = now.getHours() === 20 && now.getMinutes() === 18; // 8:18 PM
+          return isFriday && isTime;
         }
-      }
 
-      updateClock();
-      updateTextSize();
-      window.addEventListener("resize", updateTextSize);
+        /**
+         * Updates the countdown timer every second.
+         */
+        function updateCountdown() {
+          if (countdownTime > 0) {
+            const minutes = Math.floor(countdownTime / 60)
+              .toString()
+              .padStart(2, "0");
+            const seconds = (countdownTime % 60).toString().padStart(2, "0");
+            countdownElem.textContent = `${minutes}:${seconds}`;
+            countdownTime--;
+            setTimeout(updateCountdown, 1000);
+          } else {
+            countdownElem.textContent = " ";
+          }
+        }
+
+        /**
+         * Dynamically adjusts text sizes for responsiveness.
+         */
+        function updateTextSize() {
+          for (let i = 0; i < 3; i++) {
+            // Iterate for better convergence
+            curFontSize *=
+              targetWidth /
+              (clockElem.offsetWidth / clockElem.parentNode.offsetWidth);
+            clockElem.style.fontSize = `${curFontSize}px`;
+          }
+          // Set countdown font size to 25% of clock font size
+          const clockFontSize = parseFloat(
+            window.getComputedStyle(clockElem).fontSize
+          );
+          countdownElem.style.fontSize = `${clockFontSize * 0.25}px`;
+        }
+
+        /**
+         * Monitors the time and starts the countdown at the scheduled time.
+         */
+        function monitorStartTime() {
+          if (shouldStartCountdown()) {
+            updateCountdown();
+          } else {
+            setTimeout(monitorStartTime, 1000);
+          }
+        }
+
+        // Initialize the components
+        updateClock();
+        updateTextSize();
+        monitorStartTime();
+        window.addEventListener("resize", updateTextSize);
+      });
     </script>
   </body>
 </html>
