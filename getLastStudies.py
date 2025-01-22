@@ -1,3 +1,7 @@
+'''
+Gets the latest date from the api database and add it to the log file
+'''
+
 import requests
 import paramiko
 from datetime import datetime
