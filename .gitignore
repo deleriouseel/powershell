@@ -1,6 +1,6 @@
 .env
 venv
-
+*.log
 *.csv
-
+*.txt
 test.*
