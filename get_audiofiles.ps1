@@ -1,3 +1,6 @@
+# Gets the files from the USB drive and copies them to the destination folder, renaming them in the process. 
+# It also removes duplicate files based on their modified date and logs the changes to a file.
+
 # Define the name of the USB drive to monitor
 $usbDriveName = "ROLAND"
 $sourceFolder = "\RSS\M-400\SONGS\"
