@@ -14,7 +14,7 @@ logging.basicConfig(
     filename="studiesByDate.log",
 )
 
-workbook = "C:/Users/Kristin/OneDrive - North Country Chapel/Studies by Date.xlsx"
+workbook = "C:/Users/KristinHoppe/OneDrive - North Country Chapel/Studies by Date.xlsx"
 url="https://northcountrychapel.com/wp-json/wp/v2/posts?categories=48&per_page=3"
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
@@ -98,7 +98,7 @@ def writeData(dates, studies, workbook_path):
         raise
 
 def main():
-    workbook_path = "C:/Users/Kristin/OneDrive - North Country Chapel/Studies by Date.xlsx"
+    workbook_path = "C:/Users/KristinHoppe/OneDrive - North Country Chapel/Studies by Date.xlsx"
     url = "https://northcountrychapel.com/wp-json/wp/v2/posts?categories=48&per_page=3"
     
     try:

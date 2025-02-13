@@ -117,7 +117,7 @@ $headers = @{
 }
 
 
-Start-Transcript -Path "C:\Users\Kristin\Documents\GitHub\powershell\telos_disconnect.log"
+Start-Transcript -Path "C:\Users\KristinHoppe\Documents\GitHub\powershell\telos_disconnect.log"
 
 try {
     Write-Host "Starting Disconnect"
