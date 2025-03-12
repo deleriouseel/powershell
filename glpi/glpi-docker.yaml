@@ -1,0 +1,27 @@
+services:
+  mariadb:
+    image: mariadb:10.7
+    container_name: mariadb
+    hostname: mariadb
+    volumes:
+      - /var/lib/mysql:/var/lib/mysql
+    env_file:
+      - ./mariadb.env
+    restart: unless-stopped
+
+  glpi:
+    image: diouxx/glpi
+    container_name: glpi
+    hostname: glpi
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /var/www/html/glpi/:/var/www/html/glpi
+      - /etc/ssl/mylocalhost.pem:/etc/ssl/mylocalhost.pem:ro
+      - /etc/ssl/mylocalhost.key:/etc/ssl/mylocalhost.key:ro
+    environment:
+      - TIMEZONE=America/Los_Angeles
+    restart: unless-stopped
