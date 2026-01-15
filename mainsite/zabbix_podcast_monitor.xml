@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>6.0</version>
+    <date>2024-01-15T00:00:00Z</date>
+    <groups>
+        <group>
+            <uuid>94f18f0d64214b94b1db37f433a7c07d</uuid>
+            <name>Templates/Applications</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <uuid>32d8ef399e5f4790a6b1a84bfda18455</uuid>
+            <template>Template Podcast Feed Monitor</template>
+            <name>Template Podcast Feed Monitor</name>
+            <description>Monitors WordPress podcast feed for weekday (Mon-Fri) publishing schedule.
+
+Triggers:
+- Missed weekday publication
+- Less than 2 weeks (10 posts) scheduled
+- API health issues</description>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <items>
+                <!-- API Health -->
+                <item>
+                    <uuid>45f5234477cb4743ac8765c9f42e4f6d</uuid>
+                    <name>Podcast API: Health Status</name>
+                    <type>TRAP</type>
+                    <key>podcast.api_healthy</key>
+                    <delay>0</delay>
+                    <value_type>UNSIGNED</value_type>
+                    <description>Whether the WordPress podcast API is responding (1=healthy, 0=unhealthy)</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>api</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>f0802f5ab8534e2ea3a77987d5f903a3</uuid>
+                            <expression>last(/Template Podcast Feed Monitor/podcast.api_healthy)=0</expression>
+                            <name>Podcast API is not responding</name>
+                            <priority>HIGH</priority>
+                            <description>The WordPress podcast API is not responding to requests</description>
+                        </trigger>
+                    </triggers>
+                </item>
+                
+                <!-- Missed Weekday Posts -->
+                <item>
+                    <uuid>c22d30399c01454babf4ddf487eb2003</uuid>
+                    <name>Podcast: Missed Weekday Publications</name>
+                    <type>TRAP</type>
+                    <key>podcast.missed_weekday_posts</key>
+                    <delay>0</delay>
+                    <value_type>UNSIGNED</value_type>
+                    <description>Number of weekday posts that should have been published but were not. 0 = all good.</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>publish</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>09e75ea02c914549a17848f7041419d5</uuid>
+                            <expression>last(/Template Podcast Feed Monitor/podcast.missed_weekday_posts)&gt;0</expression>
+                            <name>Podcast: Missed weekday publication ({ITEM.LASTVALUE} posts)</name>
+                            <priority>HIGH</priority>
+                            <description>One or more weekday podcast episodes failed to publish on schedule</description>
+                        </trigger>
+                    </triggers>
+                </item>
+                
+                <!-- Scheduled Weekday Count -->
+                <item>
+                    <uuid>df0ac91bbff54bb1a3c0d9b0726568f7</uuid>
+                    <name>Podcast: Scheduled Weekday Episodes</name>
+                    <type>TRAP</type>
+                    <key>podcast.scheduled_weekday_count</key>
+                    <delay>0</delay>
+                    <value_type>UNSIGNED</value_type>
+                    <description>Total number of weekday episodes scheduled for future publication</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>schedule</value>
+                        </tag>
+                    </tags>
+                </item>
+                
+                <!-- Has Two Weeks Scheduled -->
+                <item>
+                    <uuid>6737a0cb18cb4d9dbe572c6998316ea0</uuid>
+                    <name>Podcast: Has 2 Weeks Scheduled</name>
+                    <type>TRAP</type>
+                    <key>podcast.has_two_weeks_scheduled</key>
+                    <delay>0</delay>
+                    <value_type>UNSIGNED</value_type>
+                    <description>Whether at least 10 weekday posts are scheduled (1=yes, 0=no)</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>schedule</value>
+                        </tag>
+                    </tags>
+                    <triggers>
+                        <trigger>
+                            <uuid>9bf709187fa84227ac32eea8801c4fa1</uuid>
+                            <expression>last(/Template Podcast Feed Monitor/podcast.has_two_weeks_scheduled)=0</expression>
+                            <name>Podcast: Less than 2 weeks of episodes scheduled</name>
+                            <priority>WARNING</priority>
+                            <description>There are fewer than 10 weekday posts scheduled. Need to queue more episodes.</description>
+                        </trigger>
+                    </triggers>
+                </item>
+                
+                <!-- Last Published Date (text) -->
+                <item>
+                    <uuid>5f701bc27584479ea3d45023767d717f</uuid>
+                    <name>Podcast: Last Published Date</name>
+                    <type>TRAP</type>
+                    <key>podcast.last_published_date</key>
+                    <delay>0</delay>
+                    <value_type>TEXT</value_type>
+                    <description>Date of the most recently published episode (YYYY-MM-DD)</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>publish</value>
+                        </tag>
+                    </tags>
+                </item>
+                
+                <!-- Last Published Title -->
+                <item>
+                    <uuid>1b43bb140a634e7a856a50bddb4971ad</uuid>
+                    <name>Podcast: Last Published Title</name>
+                    <type>TRAP</type>
+                    <key>podcast.last_published_title</key>
+                    <delay>0</delay>
+                    <value_type>TEXT</value_type>
+                    <description>Title of the most recently published episode</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>publish</value>
+                        </tag>
+                    </tags>
+                </item>
+                
+                <!-- Last Published Timestamp -->
+                <item>
+                    <uuid>cbc71125c9874c08b79ab0265434d879</uuid>
+                    <name>Podcast: Last Published Timestamp</name>
+                    <type>TRAP</type>
+                    <key>podcast.last_published_timestamp</key>
+                    <delay>0</delay>
+                    <value_type>UNSIGNED</value_type>
+                    <units>unixtime</units>
+                    <description>Unix timestamp of last published episode</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>publish</value>
+                        </tag>
+                    </tags>
+                </item>
+                
+                <!-- Next Scheduled Date -->
+                <item>
+                    <uuid>3a7bab34048d4817bf1e6c68aa054258</uuid>
+                    <name>Podcast: Next Scheduled Date</name>
+                    <type>TRAP</type>
+                    <key>podcast.next_scheduled_date</key>
+                    <delay>0</delay>
+                    <value_type>TEXT</value_type>
+                    <description>Date of the next scheduled episode (YYYY-MM-DD)</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>schedule</value>
+                        </tag>
+                    </tags>
+                </item>
+                
+                <!-- Next Scheduled Title -->
+                <item>
+                    <uuid>3d00e78d0e834b36826ee6a45ff79fd5</uuid>
+                    <name>Podcast: Next Scheduled Title</name>
+                    <type>TRAP</type>
+                    <key>podcast.next_scheduled_title</key>
+                    <delay>0</delay>
+                    <value_type>TEXT</value_type>
+                    <description>Title of the next scheduled episode</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>schedule</value>
+                        </tag>
+                    </tags>
+                </item>
+                
+                <!-- Next Scheduled Timestamp -->
+                <item>
+                    <uuid>b809166233ab432181aecb42b1114791</uuid>
+                    <name>Podcast: Next Scheduled Timestamp</name>
+                    <type>TRAP</type>
+                    <key>podcast.next_scheduled_timestamp</key>
+                    <delay>0</delay>
+                    <value_type>UNSIGNED</value_type>
+                    <units>unixtime</units>
+                    <description>Unix timestamp of next scheduled episode</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>schedule</value>
+                        </tag>
+                    </tags>
+                </item>
+                
+                <!-- Last (Furthest) Scheduled Date -->
+                <item>
+                    <uuid>bbfaa61264084ba5bc0979b4dc960765</uuid>
+                    <name>Podcast: Last Scheduled Date (Furthest Out)</name>
+                    <type>TRAP</type>
+                    <key>podcast.last_scheduled_date</key>
+                    <delay>0</delay>
+                    <value_type>TEXT</value_type>
+                    <description>Date of the furthest-out scheduled episode (YYYY-MM-DD)</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>schedule</value>
+                        </tag>
+                    </tags>
+                </item>
+                
+                <!-- Last (Furthest) Scheduled Title -->
+                <item>
+                    <uuid>5259f2d454244f738572dcc085ec34db</uuid>
+                    <name>Podcast: Last Scheduled Title (Furthest Out)</name>
+                    <type>TRAP</type>
+                    <key>podcast.last_scheduled_title</key>
+                    <delay>0</delay>
+                    <value_type>TEXT</value_type>
+                    <description>Title of the furthest-out scheduled episode</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>schedule</value>
+                        </tag>
+                    </tags>
+                </item>
+                
+                <!-- Last (Furthest) Scheduled Timestamp -->
+                <item>
+                    <uuid>f7456b2f0cfe4350a57af8c840702601</uuid>
+                    <name>Podcast: Last Scheduled Timestamp (Furthest Out)</name>
+                    <type>TRAP</type>
+                    <key>podcast.last_scheduled_timestamp</key>
+                    <delay>0</delay>
+                    <value_type>UNSIGNED</value_type>
+                    <units>unixtime</units>
+                    <description>Unix timestamp of furthest-out scheduled episode</description>
+                    <tags>
+                        <tag>
+                            <tag>component</tag>
+                            <value>schedule</value>
+                        </tag>
+                    </tags>
+                </item>
+            </items>
+        </template>
+    </templates>
+</zabbix_export>
