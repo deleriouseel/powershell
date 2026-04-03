@@ -1,18 +1,13 @@
 """ Get the latest study titles from the website and add them to the master list"""
 
 
-import logging
 import requests
 import datetime
 from datetime import timedelta
 from openpyxl import load_workbook
+from logger import get_logger
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    filename="studiesByDate.log",
-)
+logger = get_logger("study_titles", __file__)
 
 workbook = "C:/Users/KristinHoppe/OneDrive - North Country Chapel/Studies by Date.xlsx"
 url="https://northcountrychapel.com/wp-json/wp/v2/posts?categories=48&per_page=3"
@@ -30,7 +25,7 @@ def getDates():
     for day in days: 
         lastWeekend = datetime.datetime.now() - datetime.timedelta(days=week_day) - datetime.timedelta(day)
         dates.append(lastWeekend.strftime("%Y-%m-%d"))
-    logging.info(dates)    
+    logger.info(dates)    
     return dates
 
 def getAPI(url):
@@ -53,7 +48,7 @@ def getAPI(url):
                 if date:
                     dates_to_studies[date] = title
             except (KeyError, AttributeError) as e:
-                logging.warning(f"Error processing post: {e}")
+                logger.error(f"Error processing post: {e}")
         
         # Get the dates we're looking for
         target_dates = getDates()
@@ -64,19 +59,19 @@ def getAPI(url):
             study = dates_to_studies.get(date, "No Study Available")
             processed_studies.append(study)
             if study == "No Study Available":
-                logging.warning(f"No study found for date: {date}")
+                logger.error(f"No study found for date: {date}")
             
-        logging.info(f"Processed studies: {processed_studies}")
+        logger.info(f"Processed studies: {processed_studies}")
         return processed_studies
         
     except requests.RequestException as e:
-        logging.error(f"API request failed: {e}")
+        logger.error(f"API request failed: {e}")
         return ["API Error"] * 3
 
 
 def writeData(dates, studies, workbook_path):
     if len(dates) != len(studies):
-        logging.warning(f"Mismatch between dates ({len(dates)}) and studies ({len(studies)})")
+        logger.error(f"Mismatch between dates ({len(dates)}) and studies ({len(studies)})")
     
     try:
         current_workbook = load_workbook(workbook_path)
@@ -88,13 +83,13 @@ def writeData(dates, studies, workbook_path):
             zippered.append(date)
             zippered.append(study or "No Study")  # Handle None values
             
-        logging.info(f"Writing data: {zippered}")
+        logger.info(f"Writing data: {zippered}")
         worksheet.append(zippered)
         current_workbook.save(workbook_path)
         current_workbook.close()
         
     except Exception as e:
-        logging.error(f"Error writing to Excel: {e}")
+        logger.error(f"Error writing to Excel: {e}")
         raise
 
 def main():
@@ -102,14 +97,14 @@ def main():
     url = "https://northcountrychapel.com/wp-json/wp/v2/posts?categories=48&per_page=3"
     
     try:
-        logging.info("Starting script")
+        logger.info("Starting script")
         dates = getDates()
         studies = getAPI(url)
         writeData(dates, studies, workbook_path)
-        logging.info("Script completed successfully")
+        logger.info("Script completed successfully")
         
     except Exception as e:
-        logging.error(f"Script failed: {e}")
+        logger.error(f"Script failed: {e}")
         raise
 
 if __name__ == "__main__":
