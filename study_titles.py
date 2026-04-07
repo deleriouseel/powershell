@@ -7,10 +7,13 @@ from datetime import timedelta
 from openpyxl import load_workbook
 from logger import get_logger
 
-logger = get_logger("study_titles", __file__)
+SCRIPT_NAME = "study_titles"
+logger = get_logger(SCRIPT_NAME, __file__)
 
-workbook = "C:/Users/KristinHoppe/OneDrive - North Country Chapel/Studies by Date.xlsx"
-url="https://northcountrychapel.com/wp-json/wp/v2/posts?categories=48&per_page=3"
+def log_extra(**kwargs):
+    return {"script_name": SCRIPT_NAME, **kwargs}
+
+
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
 }
@@ -25,21 +28,21 @@ def getDates():
     for day in days: 
         lastWeekend = datetime.datetime.now() - datetime.timedelta(days=week_day) - datetime.timedelta(day)
         dates.append(lastWeekend.strftime("%Y-%m-%d"))
-    logger.info(dates)    
+    logger.info(f"getDates dates: {dates}", extra=log_extra())
     return dates
 
-def getAPI(url):
+def getAPI(url, target_dates):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
     }
-    
+
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        
+
         posts = response.json()
         dates_to_studies = {}  # Dictionary to map dates to studies
-        
+
         # Process each post
         for post in posts:
             try:
@@ -48,30 +51,27 @@ def getAPI(url):
                 if date:
                     dates_to_studies[date] = title
             except (KeyError, AttributeError) as e:
-                logger.error(f"Error processing post: {e}")
-        
-        # Get the dates we're looking for
-        target_dates = getDates()
-        
+                logger.error(f"Error processing WP post: {e}", extra=log_extra(event_type="error", error_message=str(e)))
+
         # Create list of studies matching our target dates
         processed_studies = []
         for date in target_dates:
             study = dates_to_studies.get(date, "No Study Available")
             processed_studies.append(study)
             if study == "No Study Available":
-                logger.error(f"No study found for date: {date}")
+                logger.error(f"No study found for date: {date}",  extra=log_extra(event_type="error", error_message=f"No study found for date: {date}"))
             
-        logger.info(f"Processed studies: {processed_studies}")
+        logger.info(f"Processed studies: {processed_studies}", extra=log_extra())
         return processed_studies
         
     except requests.RequestException as e:
-        logger.error(f"API request failed: {e}")
+        logger.error(f"API request failed: {e}", extra=log_extra(event_type="error", error_message=str(e)))
         return ["API Error"] * 3
 
 
 def writeData(dates, studies, workbook_path):
     if len(dates) != len(studies):
-        logger.error(f"Mismatch between dates ({len(dates)}) and studies ({len(studies)})")
+        logger.warning(f"Mismatch between dates ({len(dates)}) and studies ({len(studies)})", extra=log_extra(event_type="error"))
     
     try:
         current_workbook = load_workbook(workbook_path)
@@ -83,29 +83,34 @@ def writeData(dates, studies, workbook_path):
             zippered.append(date)
             zippered.append(study or "No Study")  # Handle None values
             
-        logger.info(f"Writing data: {zippered}")
+        logger.info(f"Writing data: {zippered}", extra=log_extra())
         worksheet.append(zippered)
         current_workbook.save(workbook_path)
         current_workbook.close()
         
     except Exception as e:
-        logger.error(f"Error writing to Excel: {e}")
+        logger.error(f"Error writing to Excel: {e}", extra=log_extra(event_type="error", error_message=str(e)))
         raise
 
 def main():
     workbook_path = "C:/Users/KristinHoppe/OneDrive - North Country Chapel/Studies by Date.xlsx"
     url = "https://northcountrychapel.com/wp-json/wp/v2/posts?categories=48&per_page=3"
     
+
     try:
-        logger.info("Starting script")
+ 
         dates = getDates()
-        studies = getAPI(url)
+        studies = getAPI(url, dates)
         writeData(dates, studies, workbook_path)
-        logger.info("Script completed successfully")
-        
+
     except Exception as e:
-        logger.error(f"Script failed: {e}")
+        logger.error(f"Script failed: {e}",
+                 extra=log_extra(event_type="script_stop", exit_status="error", error_message=str(e)))
         raise
 
 if __name__ == "__main__":
+    logger.info(f"Starting script: {SCRIPT_NAME}",
+        extra=log_extra(event_type="script_start"))
     main()
+    logger.info(f"Finished script: {SCRIPT_NAME}",
+        extra=log_extra(event_type="script_stop", exit_status="success"))
