@@ -129,6 +129,8 @@ def main() -> None:
 
         if idle:
             logger.info("Already disconnected", extra=log_extra())
+            logger.info("Disconnect confirmed — unit is idle",
+                        extra=log_extra(event_type="key_event", disconnect_confirmed=True))
             logger.info(f"Finished script: {SCRIPT_NAME}",
                         extra=log_extra(event_type="script_stop", exit_status="success"))
             return
@@ -148,7 +150,8 @@ def main() -> None:
             if idle is None:
                 continue
             if idle:
-                logger.info("Disconnect confirmed — unit is idle", extra=log_extra())
+                logger.info("Disconnect confirmed — unit is idle",
+                            extra=log_extra(event_type="key_event", disconnect_confirmed=True))
                 logger.info(f"Finished script: {SCRIPT_NAME}",
                             extra=log_extra(event_type="script_stop", exit_status="success"))
                 return
